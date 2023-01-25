@@ -1,0 +1,6 @@
+[submodule "src/thirdparty/SuperPointPretrainedNetwork"]
+	path = src/thirdparty/SuperPointPretrainedNetwork
+	url = https://github.com/Unbinilium/SuperPointPretrainedNetwork
+[submodule "src/thirdparty/SuperGluePretrainedNetwork"]
+	path = src/thirdparty/SuperGluePretrainedNetwork
+	url = https://github.com/Unbinilium/SuperGluePretrainedNetwork

@@ -1,0 +1,21 @@
+name: sfm
+channels:
+  - defaults
+  - pytorch
+dependencies:
+  - python=3.8
+  - cudatoolkit=11.3
+  - numpy=1.23.5
+  - pytorch=1.10.1
+  - torchvision=0.11.2
+  - pillow=9.3.0
+  - scipy=1.9.3
+  - pip=22.3.1
+  - pip:
+    - jupyter==1.0.0
+    - ipywidgets==8.0.4
+    - jupyterlab==3.5.2
+    - matplotlib==3.6.3
+    - opencv-contrib-python==4.7.0.68
+    - tqdm==4.64.1
+    - open3d==0.16.1

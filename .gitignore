@@ -1,0 +1,11 @@
+data/datasets
+bin
+etc
+include
+lib
+share
+pyvenv.cfg
+__pycache__
+*.pyc
+.ipynb_checkpoints
+.DS_Store
