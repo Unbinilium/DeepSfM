@@ -4,3 +4,6 @@
 [submodule "src/thirdparty/SuperGluePretrainedNetwork"]
 	path = src/thirdparty/SuperGluePretrainedNetwork
 	url = https://github.com/Unbinilium/SuperGluePretrainedNetwork
+[submodule "src/thirdparty/DIS"]
+	path = src/thirdparty/DIS
+	url = https://github.com/Unbinilium/DIS
