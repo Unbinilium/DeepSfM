@@ -17,5 +17,6 @@ dependencies:
     - jupyterlab==3.5.2
     - matplotlib==3.6.3
     - opencv-contrib-python==4.7.0.68
+    - scikit-image==0.19.3
     - tqdm==4.64.1
     - open3d==0.16.1
