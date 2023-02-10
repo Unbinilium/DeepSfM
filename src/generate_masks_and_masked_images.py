@@ -96,7 +96,7 @@ def gm_and_mi(img_lists, masks_out, masked_images_out):
         inp_tensor_with_size = normalize_2_tensor_with_size(img, hypar)
         mask = dis_predict_mask(dis_net_full, inp_tensor_with_size)
 
-        mask_name = os.path.basename(img_path)[0]
+        mask_name = Path(img_path).stem
         cv2.imwrite(os.path.join(masks_out, mask_name + '.png'), mask)
 
         masked_img = cv2.bitwise_and(img, img, mask=mask)
