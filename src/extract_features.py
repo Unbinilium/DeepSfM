@@ -1,8 +1,8 @@
 import h5py
+import logging
 import os
 import tqdm
 import torch
-import logging
 
 from torch.utils.data import DataLoader
 
