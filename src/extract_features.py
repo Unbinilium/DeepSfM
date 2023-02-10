@@ -17,7 +17,6 @@ def spp(img_lists, feature_out, cfg):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     logging.info('Running inference on device \"{}\"'.format(device))
 
-    # conf = cfg['conf']
     model = spp_det(cfg['conf']).to(device=device)
     model.eval()
     load_network(model, cfg['model']['path'], force=True)
@@ -52,14 +51,3 @@ def main(image_dir, feature_out, config):
             img_lists.append(os.path.join(image_dir, filename))
 
     spp(img_lists, feature_out, config)
-
-
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('-i', type=str)
-#     parser.add_argument('-f', type=str)
-#     args = parser.parse_args()
-
-#     img_lists = [args.i]
-#     feature_out = args.f
-#     spp(img_lists, feature_out, confs['superpoint'])
