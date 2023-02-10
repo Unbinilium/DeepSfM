@@ -4,6 +4,7 @@ import os
 import tqdm
 import torch
 
+from pathlib import Path
 from torch.utils.data import DataLoader
 
 
@@ -50,4 +51,5 @@ def main(image_dir, feature_out, config):
         if os.path.splitext(filename)[1] in ['.jpg', '.png']:
             img_lists.append(os.path.join(image_dir, filename))
 
+    img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
     spp(img_lists, feature_out, config)
