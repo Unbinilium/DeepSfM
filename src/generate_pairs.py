@@ -103,7 +103,7 @@ def main(image_dir, pairs_out, config):
 
     if config['method'] == 'sequential':
         generate_sequential_pairs(img_lists, pairs_out)
-    elif config['method'] == 'from_poses':
+    elif config['method'] == 'from-poses':
         generate_pairs_from_poses(img_lists, pairs_out, config['num_matched'], config['min_rotation'])
     else:
         raise NotImplementedError()
