@@ -8,8 +8,8 @@ def generate_pairs(img_lists, covis_pairs_out, cfg):
         pairs = []
 
         for i in range(1, len(img_lists) + 1):
-            name0 = Path(img_lists[i - 1]).stem
-            name1 = Path(img_lists[i % len(img_lists)]).stem
+            name0 = Path(img_lists[i - 1]).name
+            name1 = Path(img_lists[i % len(img_lists)]).name
 
             pairs.append((name0, name1))
 
