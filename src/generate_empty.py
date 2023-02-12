@@ -49,6 +49,7 @@ def import_data(img_lists, pose_dir, intrin_dir):
         camera_id += 1
 
         img_name = Path(img_path).stem
+        img_name_with_ext = Path(img_path).name
 
         # read pose
         _, tvec, qvec = get_pose_from_txt(img_name, pose_dir)
@@ -65,7 +66,7 @@ def import_data(img_lists, pose_dir, intrin_dir):
             qvec=qvec,
             tvec=tvec,
             camera_id=camera_id,
-            name=img_path,
+            name=img_name_with_ext,
             xys=xys_,
             point3D_ids=point3D_ids_
         )
