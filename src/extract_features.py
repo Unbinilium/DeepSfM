@@ -46,10 +46,9 @@ def spp(img_lists, feature_out, cfg):
 
 def main(image_dir, feature_out, config):
     img_lists = []
-
     for filename in os.listdir(image_dir):
         if os.path.splitext(filename)[1] in ['.jpg', '.png']:
             img_lists.append(os.path.join(image_dir, filename))
-
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
+
     spp(img_lists, feature_out, config)
