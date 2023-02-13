@@ -70,7 +70,7 @@ mkdir make
 cd make
 
 #Run CMake:
-cmake .. -DVCG_ROOT="${WS}/VCG" -DOpenMVS_USE_CUDA=NO
+cmake .. -DVCG_ROOT="${WS}/VCG" -DOpenMVS_USE_CUDA=OFF
 
 #Build:
 cmake --build . -j4
