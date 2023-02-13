@@ -3,6 +3,7 @@ import numpy as np
 import os
 import tqdm
 import torch
+from PIL import Image
 
 from pathlib import Path
 from torchvision import transforms
@@ -85,7 +86,7 @@ def dis_predict_mask(dis_net, image_tensor_with_size):
 
 
 @torch.no_grad()
-def gm_and_mi(img_lists, masks_out, masked_images_out):
+def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out):
     hypar['model'] = ISNetDIS()
     dis_net_full = build_model(hypar, device)
     dis_net_full.eval()
@@ -99,8 +100,9 @@ def gm_and_mi(img_lists, masks_out, masked_images_out):
         mask_name = Path(img_path).stem
         cv2.imwrite(os.path.join(masks_out, mask_name + '.png'), mask)
 
-        masked_img = cv2.bitwise_and(img, img, mask=mask)
-        cv2.imwrite(os.path.join(masked_images_out, mask_name + '.png'), masked_img)
+        rgba_img = Image.fromarray(img).convert('RGBA')
+        rgba_img.putalpha(Image.fromarray(mask).convert('L'))
+        rgba_img.save(os.path.join(masked_images_out, mask_name + '.png'))
 
 
 def main(image_dir, masks_out, masked_images_out):
@@ -117,4 +119,4 @@ def main(image_dir, masks_out, masked_images_out):
             img_lists.append(os.path.join(image_dir, filename))
 
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
-    gm_and_mi(img_lists, masks_out, masked_images_out)
+    generate_masks_and_masked_images(img_lists, masks_out, masked_images_out)
