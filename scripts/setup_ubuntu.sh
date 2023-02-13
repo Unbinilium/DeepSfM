@@ -13,7 +13,7 @@ sudo apt-get update
 ## Python deps
 cd "${WS}"
 
-pip3 -m install -r ../env/venv_cpu_3.10
+pip3 install -r ../env/venv_cpu_3.10
 
 
 ## Compile COLMAP
