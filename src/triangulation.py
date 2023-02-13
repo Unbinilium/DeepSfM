@@ -12,7 +12,7 @@ from colmap.database import COLMAPDatabase
 
 
 def names_to_pair(name0, name1):
-    return '_'.join((name0.replace('/', '-'), name1.replace('/', '-')))
+    return '_'.join((name0, name1))
 
 
 def geometric_verification(colmap_path, database_path, pairs_path):
@@ -60,8 +60,8 @@ def import_features(image_ids, database_path, feature_path):
     feature_file = h5py.File(str(feature_path), 'r')
     db = COLMAPDatabase.connect(database_path)
 
-    for image_name, image_id in tqdm.tqdm(image_ids.items()):
-        image_name = Path(image_name).name
+    for image_path, image_id in tqdm.tqdm(image_ids.items()):
+        image_name = Path(image_path).name
         keypoints = feature_file[image_name]['keypoints'].__array__()
         keypoints += 0.5
         db.add_keypoints(image_id, keypoints)
