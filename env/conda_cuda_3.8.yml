@@ -17,7 +17,7 @@ dependencies:
     - ipywidgets==8.0.4
     - jupyterlab==3.5.2
     - matplotlib==3.6.3
-    - opencv-contrib-python==4.7.0.68
+    - opencv-contrib-python==4.5.5.62
     - scikit-image==0.19.3
     - tqdm==4.64.1
     - open3d==0.16.1
