@@ -188,4 +188,6 @@ def main(sfm_dir, empty_sfm_model, outputs_dir, pairs, features, matches, \
     if not image_dir:
         image_dir = '/'
     stats = run_triangulation(colmap_path, model, database, image_dir, empty_sfm_model)
+
+    Path(outputs_dir).mkdir(exist_ok=True, parents=True)
     os.system(f'colmap model_converter --input_path {model} --output_path {outputs_dir}/model.ply --output_type PLY')
