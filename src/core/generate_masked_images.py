@@ -113,11 +113,9 @@ def main(image_dir, masks_out, masked_images_out, config):
         print(f'Old masked images out directory exist: {masked_images_out}')
 
     img_lists = []
-
     for filename in os.listdir(image_dir):
         if os.path.splitext(filename)[1] in ['.jpg', '.png']:
             img_lists.append(os.path.join(image_dir, filename))
-
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
 
     generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, config)
