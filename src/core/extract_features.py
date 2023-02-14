@@ -1,22 +1,27 @@
-import h5py
-import logging
 import os
-import tqdm
-import torch
-
 from pathlib import Path
+import sys
+
+import h5py
+import torch
+import tqdm
 from torch.utils.data import DataLoader
+
+cfd = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(cfd)
+wsd = os.path.join(cfd, '../../')
+sys.path.append(wsd)
 
 
 @torch.no_grad()
 def spp(img_lists, feature_out, cfg):
     """extract keypoints info by superpoint"""
-    from utils import load_network
-    from utils import NormalizedDataset
+
     from thirdparty.SuperPointPretrainedNetwork.superpoint import SuperPoint as spp_det
+    from utils import NormalizedDataset, load_network
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    logging.info('Running inference on device \"{}\"'.format(device))
+    print(f'Running inference on device \"{device}\"')
 
     model = spp_det(cfg['conf']).to(device=device)
     model.eval()
@@ -26,7 +31,8 @@ def spp(img_lists, feature_out, cfg):
     loader = DataLoader(dataset, num_workers=1)
 
     feature_file = h5py.File(feature_out, 'w')
-    logging.info(f'Exporting features to {feature_out}')
+    print(f'Exporting features to {feature_out}')
+
     for data in tqdm.tqdm(loader):
         inp = data['image'].to(device=device)
         pred = model(inp)
@@ -41,7 +47,7 @@ def spp(img_lists, feature_out, cfg):
         del pred
 
     feature_file.close()
-    logging.info('Finishing exporting features.')
+    print('Finishing exporting features.')
 
 
 def main(image_dir, feature_out, config):
@@ -50,5 +56,9 @@ def main(image_dir, feature_out, config):
         if os.path.splitext(filename)[1] in ['.jpg', '.png']:
             img_lists.append(os.path.join(image_dir, filename))
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
+
+    if os.path.isfile(feature_out):
+        print('Old feature file exits, removing...')
+        os.remove(feature_out)
 
     spp(img_lists, feature_out, config)
