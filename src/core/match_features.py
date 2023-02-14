@@ -1,26 +1,33 @@
-import h5py
-import logging
 import os
+import sys
+
+import h5py
 import torch
 import tqdm
 
+cfd = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(cfd)
+wsd = os.path.join(cfd, '../../')
+sys.path.append(wsd)
+
 
 def names_to_pair(name0, name1):
-    return '_'.join((name0.replace('/', '-'), name1.replace('/', '-')))
+    return '_'.join((name0, name1))
 
 
 @torch.no_grad()
-def spg(cfg, feature_path, pairs, matches_out):
+def spg(feature_path, pairs, matches_out, cfg):
     """Match features by SuperGlue"""
-    from utils import load_network
+
     from thirdparty.SuperGluePretrainedNetwork.models.superglue import SuperGlue as spg_matcher
+    from utils import load_network
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    logging.info('Running inference on device \"{}\"'.format(device))
+    print(f'Running inference on device \"{device}\"')
 
     assert os.path.exists(feature_path), feature_path
     feature_file = h5py.File(feature_path, 'r')
-    logging.info(f'Exporting matches to {matches_out}')
+    print(f'Exporting matches to {matches_out}')
 
     with open(pairs, 'r') as f:
         pair_list = f.read().rstrip('\n').split('\n')
@@ -71,8 +78,12 @@ def spg(cfg, feature_path, pairs, matches_out):
         matched |= {(name0, name1), (name1, name0)}
 
     match_file.close()
-    logging.info('Finishing exporting matches.')
+    print('Finishing exporting matches...')
 
 
 def main(features, pairs, matches_out, config):
-    spg(config, features, pairs, matches_out)
+    if os.path.isfile(matches_out):
+        print('Old matches file exits, removing...')
+        os.remove(matches_out)
+
+    spg(features, pairs, matches_out, config)
