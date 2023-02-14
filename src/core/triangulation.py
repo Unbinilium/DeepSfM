@@ -1,14 +1,19 @@
 import os
-import h5py
-import logging
-import tqdm
 import subprocess
-import os.path as osp
-import numpy as np
-
+import sys
 from pathlib import Path
-from colmap.read_write_model import CAMERA_MODEL_NAMES, Image, read_cameras_binary, read_images_binary
-from colmap.database import COLMAPDatabase
+
+import h5py
+import numpy as np
+import tqdm
+
+cfd = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(cfd)
+wsd = os.path.join(cfd, '../../')
+sys.path.append(wsd)
+
+from thirdparty.colmap.scripts.python.database import COLMAPDatabase
+from thirdparty.colmap.scripts.python.read_write_model import CAMERA_MODEL_NAMES, read_cameras_binary, read_images_binary
 
 
 def names_to_pair(name0, name1):
@@ -17,46 +22,59 @@ def names_to_pair(name0, name1):
 
 def geometric_verification(colmap_path, database_path, pairs_path):
     """ Geometric verfication """
-    logging.info('Performing geometric verification of the matches...')
+
+    print('Performing geometric verification of the matches...')
     cmd = [
         str(colmap_path), 'matches_importer',
         '--database_path', str(database_path),
         '--match_list_path', str(pairs_path),
         '--match_type', 'pairs'
     ]
+    print(' '.join(cmd))
     ret = subprocess.call(cmd)
     if ret != 0:
-        logging.warning('Problem with matches_importer, existing.')
+        print('Problem with matches_importer, exiting...')
         exit(ret)
 
 
 def create_db_from_model(empty_model, database_path):
     """ Create COLMAP database file from empty COLMAP binary file. """
-    if database_path.exists():
-        logging.warning('Database already exists.')
 
-    cameras = read_cameras_binary(str(empty_model / 'cameras.bin'))
-    images = read_images_binary(str(empty_model / 'images.bin'))
+    if database_path.exists():
+        print(f'Database already exists: {database_path}')
+
+    cameras = read_cameras_binary(os.path.join(empty_model, 'cameras.bin'))
+    images = read_images_binary(os.path.join(empty_model, 'images.bin'))
 
     db = COLMAPDatabase.connect(database_path)
     db.create_tables()
 
     for i, camera in cameras.items():
         model_id = CAMERA_MODEL_NAMES[camera.model].model_id
-        db.add_camera(model_id, camera.width, camera.height, camera.params,
-                      camera_id=i, prior_focal_length=True)
+        db.add_camera(
+            model_id,
+            camera.width,
+            camera.height,
+            camera.params,
+            camera_id=i,
+            prior_focal_length=True)
 
     for i, image in images.items():
-        db.add_image(image.name, image.camera_id, image_id=i)
+        db.add_image(
+            image.name,
+            image.camera_id,
+            image_id=i)
 
     db.commit()
     db.close()
+
     return {image.name: i for i, image in images.items()}
 
 
 def import_features(image_ids, database_path, feature_path):
     """ Import keypoints info into COLMAP database. """
-    logging.info("Importing features into the database...")
+
+    print('Importing features into the database...')
     feature_file = h5py.File(str(feature_path), 'r')
     db = COLMAPDatabase.connect(database_path)
 
@@ -71,10 +89,10 @@ def import_features(image_ids, database_path, feature_path):
     db.close()
 
 
-def import_matches(image_ids, database_path, pairs_path, matches_path, feature_path,
-                   min_match_score=None, skip_geometric_verification=False):
+def import_matches(image_ids, database_path, pairs_path, matches_path, min_match_score=None, skip_geometric_verification=False):
     """ Import matches info into COLMAP database. """
-    logging.info("Importing matches into the database...")
+
+    print('Importing matches into the database...')
 
     with open(str(pairs_path), 'r') as f:
         pairs = [p.split(' ') for p in f.read().split('\n')]
@@ -122,8 +140,8 @@ def import_matches(image_ids, database_path, pairs_path, matches_path, feature_p
 
 def run_triangulation(colmap_path, model_path, database_path, image_dir, empty_model):
     """ run triangulation on given database """
-    logging.info('Running the triangulation...')
 
+    print('Running the triangulation...')
     cmd = [
         str(colmap_path), 'point_triangulator',
         '--database_path', str(database_path),
@@ -134,10 +152,10 @@ def run_triangulation(colmap_path, model_path, database_path, image_dir, empty_m
         '--Mapper.ba_refine_principal_point', '0',
         '--Mapper.ba_refine_extra_params', '0'
     ]
-    logging.info(' '.join(cmd))
+    print(' '.join(cmd))
     ret = subprocess.call(cmd)
     if ret != 0:
-        logging.warning('Problem with point_triangulator, existing.')
+        print('Problem with point_triangulator, exiting...')
         exit(ret)
 
     stats_raw = subprocess.check_output(
@@ -160,6 +178,22 @@ def run_triangulation(colmap_path, model_path, database_path, image_dir, empty_m
             stats['mean_reproj_error'] = float(stat.split()[-1][:-2])
     return stats
 
+def export_ply_model(colmap_path, input_model, outputs_dir):
+    """ Export PLY model after trianglution """
+
+    print('Exporting PLY model after trianglution...')
+    cmd = [
+        str(colmap_path), 'model_converter',
+        '--input_path', str(input_model),
+        '--output_path', str(os.path.join(outputs_dir, 'model.ply')),
+        '--output_type', 'PLY'
+    ]
+    print(' '.join(cmd))
+    ret = subprocess.call(cmd)
+    if ret != 0:
+        print('Problem with export_ply_model, exiting...')
+        exit(ret)
+
 
 def main(sfm_dir, empty_sfm_model, outputs_dir, pairs, features, matches, \
          colmap_path='colmap', skip_geometric_verification=False, min_match_score=None, image_dir=None):
@@ -172,22 +206,25 @@ def main(sfm_dir, empty_sfm_model, outputs_dir, pairs, features, matches, \
     assert Path(pairs).exists(), pairs
     assert Path(matches).exists(), matches
 
+    if os.path.isdir(sfm_dir):
+        print('Old sfm dir exits, removing...')
+        cmd = ' '.join(['rm', '-fr', sfm_dir])
+        os.system(cmd)
     Path(sfm_dir).mkdir(parents=True, exist_ok=True)
-    database = osp.join(sfm_dir, 'database.db')
-    model = osp.join(sfm_dir, 'model')
-    Path(model).mkdir(exist_ok=True)
+    database = os.path.join(sfm_dir, 'database.db')
+    model = os.path.join(sfm_dir, 'model')
+    Path(model).mkdir(exist_ok=True, parents=True)
 
     image_ids = create_db_from_model(Path(empty_sfm_model), Path(database))
     import_features(image_ids, database, features)
-    import_matches(image_ids, database, pairs, matches, features,
-                   min_match_score, skip_geometric_verification)
+    import_matches(image_ids, database, pairs, matches, min_match_score, skip_geometric_verification)
 
     if not skip_geometric_verification:
         geometric_verification(colmap_path, database, pairs)
 
     if not image_dir:
-        image_dir = '/'
+        image_dir = 'images'
     stats = run_triangulation(colmap_path, model, database, image_dir, empty_sfm_model)
 
     Path(outputs_dir).mkdir(exist_ok=True, parents=True)
-    os.system(f'colmap model_converter --input_path {model} --output_path {outputs_dir}/model.ply --output_type PLY')
+    export_ply_model(colmap_path, model, outputs_dir)
