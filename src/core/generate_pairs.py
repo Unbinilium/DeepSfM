@@ -1,8 +1,8 @@
 import os
+from pathlib import Path
+
 import numpy as np
 import scipy.spatial.distance as distance
-
-from pathlib import Path
 
 
 def get_pairswise_distances(pose_files):
@@ -53,15 +53,19 @@ def generate_sequential_pairs(img_lists, pairs_out):
 
 
 def get_pose_path(img_path):
-    ext = Path(img_path).suffix
-    pose_path = img_path.replace(ext, '.txt')
-    pose_path = pose_path.replace('images', 'poses')
+    img_name = Path(img_path).stem
+    datasets_dir = Path(img_path).parent.parent
+    pose_name_ext = f'{img_name}.txt'
+    pose_path = os.path.join(datasets_dir, f'poses/{pose_name_ext}')
+
     return pose_path
 
 
 def generate_pairs_from_poses(img_lists, pairs_out, num_matched, min_rotation=10):
     pose_lists = [get_pose_path(img_path) for img_path in img_lists]
+    print(f'Got {len(pose_lists)} poses...')
 
+    print(f'Getting pairwise distances...')
     dist, dR, seqs_ids = get_pairswise_distances(pose_lists)
 
     valid = dR > min_rotation
@@ -90,16 +94,19 @@ def generate_pairs_from_poses(img_lists, pairs_out, num_matched, min_rotation=10
 
     with open(pairs_out, 'w') as f:
         f.write('\n'.join(' '.join([i, j]) for i, j in pairs))
+        print('Finishing exporting pairs...')
 
 
 def main(image_dir, pairs_out, config):
     img_lists = []
-
     for filename in os.listdir(image_dir):
         if os.path.splitext(filename)[1] in ['.jpg', '.png']:
             img_lists.append(os.path.join(image_dir, filename))
-
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
+
+    if os.path.isfile(pairs_out):
+        print('Old pairs file exits, removing...')
+        os.remove(pairs_out)
 
     if config['method'] == 'sequential':
         generate_sequential_pairs(img_lists, pairs_out)
