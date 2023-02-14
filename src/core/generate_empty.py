@@ -74,16 +74,14 @@ def import_data(img_lists, pose_dir, intrin_dir):
             camera_id=camera_id,
             name=img_name_with_ext,
             xys=xys_,
-            point3D_ids=point3D_ids_
-        )
+            point3D_ids=point3D_ids_)
 
         camera = Camera(
             id=camera_id,
             model='PINHOLE',
             width=w,
             height=h,
-            params=np.array([fx, fy, cx, cy])
-        )
+            params=np.array([fx, fy, cx, cy]))
 
         images_out[key] = image
         cameras_out[key] = camera
