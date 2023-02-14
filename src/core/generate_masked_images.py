@@ -102,20 +102,19 @@ def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, hy
 
 
 def main(image_dir, masks_out, masked_images_out, config):
-    if not os.path.isdir(masks_out):
-        os.makedirs(masks_out)
-    else:
-        print(f'Old masks out directory exist: {masks_out}')
-
-    if not os.path.isdir(masked_images_out):
-        os.makedirs(masked_images_out)
-    else:
-        print(f'Old masked images out directory exist: {masked_images_out}')
-
     img_lists = []
     for filename in os.listdir(image_dir):
         if os.path.splitext(filename)[1] in ['.jpg', '.png']:
             img_lists.append(os.path.join(image_dir, filename))
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
+
+    if not os.path.isdir(masks_out):
+        os.makedirs(masks_out)
+    else:
+        print(f'Old masks out directory exist: {masks_out}')
+    if not os.path.isdir(masked_images_out):
+        os.makedirs(masked_images_out)
+    else:
+        print(f'Old masked images out directory exist: {masked_images_out}')
 
     generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, config)
