@@ -1,12 +1,18 @@
-import cv2
-import logging
 import os
+import sys
+from pathlib import Path
+
+import cv2
 import numpy as np
 
-from pathlib import Path
-from colmap.read_write_model import Camera, Image, Point3D
-from colmap.read_write_model import rotmat2qvec
-from colmap.read_write_model import write_model
+cfd = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(cfd)
+wsd = os.path.join(cfd, '../../')
+sys.path.append(wsd)
+
+from thirdparty.colmap.scripts.python.read_write_model import Camera, Image
+from thirdparty.colmap.scripts.python.read_write_model import rotmat2qvec
+from thirdparty.colmap.scripts.python.read_write_model import write_model
 
 
 def get_pose_from_txt(img_index, pose_dir):
@@ -86,21 +92,27 @@ def import_data(img_lists, pose_dir, intrin_dir):
 
 
 def main(image_dir, empty_dir):
+    """ Write intrinsics and camera poses into COLMAP format model"""
+
     img_lists = []
     for filename in os.listdir(image_dir):
         if os.path.splitext(filename)[1] in ['.jpg', '.png']:
             img_lists.append(os.path.join(image_dir, filename))
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
 
-    """ Write intrinsics and camera poses into COLMAP format model"""
-    logging.info('Generate empty model...')
+    if os.path.isdir(empty_dir):
+        print('Old empty dir exits, removing...')
+        cmd = ' '.join(['rm', '-fr', empty_dir])
+        os.system(cmd)
+
+    print('Generate empty model...')
     sub_folder = image_dir.split('/')[-1]
     pose_dir = image_dir.replace(sub_folder, 'poses')
     intrin_dir = image_dir.replace(sub_folder, 'intrinsics')
     model = import_data(img_lists, pose_dir, intrin_dir)
 
-    logging.info(f'Writing the COLMAP model to {empty_dir}')
+    print(f'Writing the COLMAP model to {empty_dir}')
     Path(empty_dir).mkdir(exist_ok=True, parents=True)
 
     write_model(*model, path=str(empty_dir), ext='.bin')
-    logging.info('Finishing writing model.')
+    print('Finishing writing model...')
