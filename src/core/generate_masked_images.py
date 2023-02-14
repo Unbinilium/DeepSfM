@@ -1,30 +1,20 @@
+import os
+import sys
+from pathlib import Path
+
 import cv2
 import numpy as np
-import os
-import tqdm
 import torch
+import tqdm
 from PIL import Image
-
-from pathlib import Path
 from torchvision import transforms
-from thirdparty.DIS.IS_Net.data_loader_cache import normalize, im_reader, im_preprocess
-from thirdparty.DIS.IS_Net.models.isnet import ISNetGTEncoder, ISNetDIS
 
+cfd = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(cfd)
+wsd = os.path.join(cfd, '../../')
+sys.path.append(wsd)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print('Running inference on device \'{}\''.format(device))
-
-
-hypar = {
-    'model_path': '../data/models/is-net',  # load trained weights from this path
-    'restore_model': 'isnet.pth',           # name of the to-be-loaded weights
-    'interm_sup': False,                    # indicate if activate intermediate feature supervision
-    'model_digit': 'full',                  # indicates 'half' or 'full' accuracy of float number
-    'seed': 0,
-    'cache_size': [1024, 1024],             # cached input spatial resolution, can be configured into different size
-    'input_size': [1024, 1024],             # mdoel input spatial size, usually use the same value hypar['cache_size'], which means we don't further resize the images
-    'crop_size': [1024, 1024],              # random crop size from the input, it is usually set as smaller than hypar['cache_size'], e.g., [920,920] for data augmentation
-}
+from thirdparty.DIS.IS_Net.data_loader_cache import im_preprocess, normalize
 
 
 def build_model(hypar, device):
@@ -53,20 +43,17 @@ class GOSNormalize(object):
         return image
 
 
-transform = transforms.Compose([GOSNormalize([0.5, 0.5, 0.5], [1.0, 1.0, 1.0])])
-
-
-def normalize_2_tensor_with_size(im, hypar):
-    im, im_shp = im_preprocess(im, hypar['cache_size'])
+def normalize_2_tensor_with_size(im, transform, cache_size):
+    im, im_shp = im_preprocess(im, cache_size)
     im = torch.divide(im, 255.0)
     shape = torch.from_numpy(np.array(im_shp))
     return transform(im).unsqueeze(0), shape.unsqueeze(0)
 
 
-def dis_predict_mask(dis_net, image_tensor_with_size):
+def dis_predict_mask(dis_net, model_digit, device, image_tensor_with_size):
     inputs_val, shapes_val = image_tensor_with_size
 
-    inputs_val = inputs_val.type(torch.FloatTensor if hypar['model_digit'] == 'full' else torch.HalfTensor)
+    inputs_val = inputs_val.type(torch.FloatTensor if model_digit == 'full' else torch.HalfTensor)
     inputs_val_v = torch.autograd.Variable(inputs_val, requires_grad=False).to(device) # wrap inputs in Variable
 
     ds_val = dis_net(inputs_val_v)[0] # list of 6 results
@@ -75,8 +62,7 @@ def dis_predict_mask(dis_net, image_tensor_with_size):
     # recover the prediction spatial size to the orignal image size
     pred_val = torch.squeeze(torch.nn.functional.upsample(
         torch.unsqueeze(pred_val, 0), (shapes_val[0][0], shapes_val[0][1]),
-        mode='bilinear')
-    )
+        mode='bilinear'))
     ma = torch.max(pred_val)
     mi = torch.min(pred_val)
     pred_val = (pred_val - mi) / (ma - mi) # max = 1
@@ -86,16 +72,26 @@ def dis_predict_mask(dis_net, image_tensor_with_size):
 
 
 @torch.no_grad()
-def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out):
+def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, hypar):
+    print('Initializing DIS Network...')
+
+    from thirdparty.DIS.IS_Net.models.isnet import ISNetDIS
     hypar['model'] = ISNetDIS()
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f'Running inference on device \"{device}\"')
+
     dis_net_full = build_model(hypar, device)
     dis_net_full.eval()
 
+    transform = transforms.Compose([GOSNormalize([0.5, 0.5, 0.5], [1.0, 1.0, 1.0])])
+
+    print('Generating masks and masked images...')
     for img_path in tqdm.tqdm(img_lists):
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
 
-        inp_tensor_with_size = normalize_2_tensor_with_size(img, hypar)
-        mask = dis_predict_mask(dis_net_full, inp_tensor_with_size)
+        inp_tensor_with_size = normalize_2_tensor_with_size(img, transform, hypar['cache_size'])
+        mask = dis_predict_mask(dis_net_full, hypar['model_digit'], device, inp_tensor_with_size)
 
         mask_name = Path(img_path).stem
         cv2.imwrite(os.path.join(masks_out, mask_name + '.png'), mask)
@@ -105,12 +101,16 @@ def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out):
         rgba_img.save(os.path.join(masked_images_out, mask_name + '.png'))
 
 
-def main(image_dir, masks_out, masked_images_out):
+def main(image_dir, masks_out, masked_images_out, config):
     if not os.path.isdir(masks_out):
         os.makedirs(masks_out)
+    else:
+        print(f'Old masks out directory exist: {masks_out}')
 
     if not os.path.isdir(masked_images_out):
         os.makedirs(masked_images_out)
+    else:
+        print(f'Old masked images out directory exist: {masked_images_out}')
 
     img_lists = []
 
@@ -119,4 +119,5 @@ def main(image_dir, masks_out, masked_images_out):
             img_lists.append(os.path.join(image_dir, filename))
 
     img_lists = sorted(img_lists, key=lambda p: int(Path(p).stem))
-    generate_masks_and_masked_images(img_lists, masks_out, masked_images_out)
+
+    generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, config)
