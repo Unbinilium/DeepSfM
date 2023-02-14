@@ -47,7 +47,7 @@ def spp(img_lists, feature_out, cfg):
         del pred
 
     feature_file.close()
-    print('Finishing exporting features.')
+    print('Finishing exporting features...')
 
 
 def main(image_dir, feature_out, config):
