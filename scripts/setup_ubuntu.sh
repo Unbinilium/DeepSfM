@@ -1,8 +1,7 @@
 #!/bin/bash
 
-## Create tmp dir
-mkdir tmp
-cd tmp
+
+## Get workspace path
 WS="$(pwd)"
 
 
@@ -10,15 +9,11 @@ WS="$(pwd)"
 sudo apt-get update
 
 
-## Python deps
-cd "${WS}"
-
-pip3 install -r ../env/venv_cpu_3.10
+## Install python deps
+pip3 install -r "${WS}/env/venv_cpu_3.10.txt"
 
 
 ## Compile COLMAP
-cd "${WS}"
-
 sudo apt-get install -y \
     git \
     cmake \
@@ -44,8 +39,10 @@ sudo apt-get install -y \
     libceres-dev \
     libopencv-dev
 
-git clone https://github.com/colmap/colmap.git
-cd colmap
+[ -d /tmp/colmap ] && rm -fr /tmp/colmap
+cp -r "${WS}/thirdparty/colmap" /tmp/colmap
+cd /tmp/colmap
+
 git checkout dev
 mkdir build
 cd build
@@ -55,27 +52,22 @@ sudo ninja install
 
 
 ## Compile OpenMVS
-cd "${WS}"
+sudo apt-get install -y \
+    libboost-iostreams-dev \
+    libglfw3-dev libopencv-dev
 
-#Get deps
-sudo apt-get install -y libboost-iostreams-dev libglfw3-dev libopencv-dev
-git clone --recurse-submodules https://github.com/cdcseacave/VCG.git
+[ -d /tmp/VCG ] && rm -fr /tmp/VCG
+cp -r "${WS}/thirdparty/VCG" /tmp/VCG
 
-#Clone OpenMVS
-git clone --recurse-submodules https://github.com/cdcseacave/openMVS.git
+[ -d /tmp/openMVS ] && rm -fr /tmp/openMVS
+cp -r "${WS}/thirdparty/openMVS" /tmp/openMVS
+cd /tmp/openMVS
 
-#Make build directory:
-cd openMVS
 mkdir make
 cd make
 
-#Run CMake:
-cmake .. -DVCG_ROOT="${WS}/VCG" -DOpenMVS_USE_CUDA=OFF
-
-#Build:
+cmake .. -DVCG_ROOT="/tmp/VCG" -DOpenMVS_USE_CUDA=OFF
 cmake --build . -j4
-
-#Install OpenMVS library (optional):
 sudo cmake --install .
 
 echo "PATH=/usr/local/bin/OpenMVS:\$PATH" >> ~/.profile
@@ -83,6 +75,5 @@ source ~/.profile
 
 
 ## Install meshlab
-cd "${WS}"
-
-sudo apt-get install -y meshlab
+sudo apt-get install -y \
+    meshlab
