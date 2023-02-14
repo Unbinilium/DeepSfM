@@ -1,9 +1,18 @@
-[submodule "src/thirdparty/SuperPointPretrainedNetwork"]
+[submodule "thirdparty/SuperPointPretrainedNetwork"]
 	path = thirdparty/SuperPointPretrainedNetwork
 	url = https://github.com/Unbinilium/SuperPointPretrainedNetwork
-[submodule "src/thirdparty/SuperGluePretrainedNetwork"]
+[submodule "thirdparty/SuperGluePretrainedNetwork"]
 	path = thirdparty/SuperGluePretrainedNetwork
 	url = https://github.com/Unbinilium/SuperGluePretrainedNetwork
-[submodule "src/thirdparty/DIS"]
+[submodule "thirdparty/DIS"]
 	path = thirdparty/DIS
 	url = https://github.com/Unbinilium/DIS
+[submodule "thirdparty/colmap"]
+	path = thirdparty/colmap
+	url = https://github.com/Unbinilium/colmap
+[submodule "thirdparty/openMVS"]
+	path = thirdparty/openMVS
+	url = https://github.com/Unbinilium/openMVS
+[submodule "thirdparty/VCG"]
+	path = thirdparty/VCG
+	url = https://github.com/Unbinilium/VCG
