@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+import torch
 import scipy.spatial.distance as distance
 
 
@@ -94,6 +95,76 @@ def generate_pairs_from_poses(img_lists, pairs_out, num_matched, min_rotation=10
 
     with open(pairs_out, 'w') as f:
         f.write('\n'.join(' '.join([i, j]) for i, j in pairs))
+        print('Finishing exporting pairs...')
+
+
+@torch.no_grad()
+def generate_pairs_exhaustive(img_lists, feature_path, pairs_out, num_matched, cfg):
+    import itertools as it
+
+    import h5py
+    from pathlib import Path
+    import tqdm
+    from thirdparty.SuperGluePretrainedNetwork.models.superglue import SuperGlue as spg_matcher
+    from utils import load_network
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(f'Running inference on device \"{device}\"')
+
+    assert os.path.exists(feature_path), feature_path
+    feature_file = h5py.File(feature_path, 'r')
+    print(f'Loaded features from {feature_path}')
+
+    model = spg_matcher(cfg['superglue']['conf']).to(device)
+    model.eval()
+    load_network(model, cfg['superglue']['model']['path'], force=True)
+
+    idx_pairs = [e for e in it.permutations(np.arange(len(img_lists)), 2)]
+    print(f'Calculated {len(idx_pairs)} index pairs...')
+
+    print('Exhaustive matching...')
+    matches_of_pairs = {}
+    for idx_pair in tqdm.tqdm(idx_pairs):
+        i, j = idx_pair
+        name0, name1 = Path(img_lists[i]).name, Path(img_lists[j]).name
+        feats0, feats1 = feature_file[name0], feature_file[name1]
+
+        for k in feats0.keys():
+            data[k + '0'] = feats0[k].__array__()
+        for k in feats1.keys():
+            data[k + '1'] = feats1[k].__array__()
+        data = {k: torch.from_numpy(v)[None].float().to(device) for k, v in data.items()}
+
+        data['image0'] = torch.empty((1, 1, ) + tuple(feats0['image_size'])[::-1])
+        data['image1'] = torch.empty((1, 1, ) + tuple(feats1['image_size'])[::-1])
+        pred = model(data)
+
+        pred_matches = pred['matches0'][0].detach().cpu().numpy()
+        valid = pred_matches > -1
+        matches = pred['matching_scores0'][0].detach().cpu().numpy()[valid]
+
+        pair = '_'.join([str(i), str(j)])
+        matches_of_pairs[pair] = matches
+
+    print('Filtering pairs...')
+    good_pairs = []
+    for i in range(0, len(img_lists)):
+        p_v_s = {}
+        len_sum = 0
+        for j in range(0, len(img_lists)):
+            pair = '_'.join([str(i), str(j)])
+            m = matches_of_pairs[pair]
+            p_v_s[pair] = len(m) * np.average(m)
+            len_sum = len(m)
+        for (k, v) in p_v_s.items():
+            p_v_s[k] = v / len_sum
+        candidate = []
+        for (k, _) in sorted(p_v_s.items(), key=lambda item: item[1], reverse=True):
+            candidate.append(k)
+        good_pairs.extend(candidate[:num_matched])
+
+    with open(pairs_out, 'w') as f:
+        f.write('\n'.join(' '.join([i, j]) for i, j in good_pairs))
         print('Finishing exporting pairs...')
 
 
