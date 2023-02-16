@@ -99,7 +99,7 @@ def generate_pairs_from_poses(img_lists, pairs_out, num_matched, min_rotation=10
 
 
 @torch.no_grad()
-def generate_pairs_exhaustive(img_lists, feature_path, pairs_out, num_matched, cfg):
+def generate_pairs_exhaustive(img_lists, pairs_out, num_matched, feature_path cfg):
     import itertools as it
 
     import h5py
@@ -115,9 +115,9 @@ def generate_pairs_exhaustive(img_lists, feature_path, pairs_out, num_matched, c
     feature_file = h5py.File(feature_path, 'r')
     print(f'Loaded features from {feature_path}')
 
-    model = spg_matcher(cfg['superglue']['conf']).to(device)
+    model = spg_matcher(cfg['conf']).to(device)
     model.eval()
-    load_network(model, cfg['superglue']['model']['path'], force=True)
+    load_network(model, cfg['model']['path'], force=True)
 
     idx_pairs = [e for e in it.permutations(np.arange(len(img_lists)), 2)]
     print(f'Calculated {len(idx_pairs)} index pairs...')
@@ -183,5 +183,7 @@ def main(image_dir, pairs_out, config):
         generate_sequential_pairs(img_lists, pairs_out)
     elif config['method'] == 'from-poses':
         generate_pairs_from_poses(img_lists, pairs_out, config['num_matched'], config['min_rotation'])
+    elif config['method'] == 'exhaustive':
+        generate_pairs_exhaustive(img_lists, pairs_out, config['num_matched'], config['feature_path'], config['superglue'])
     else:
         raise NotImplementedError()
