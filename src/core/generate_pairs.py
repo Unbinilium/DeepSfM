@@ -99,7 +99,7 @@ def generate_pairs_from_poses(img_lists, pairs_out, num_matched, min_rotation=10
 
 
 @torch.no_grad()
-def generate_pairs_exhaustive(img_lists, pairs_out, num_matched, feature_path cfg):
+def generate_pairs_exhaustive(img_lists, pairs_out, num_matched, feature_path, cfg):
     import itertools as it
 
     import h5py
@@ -129,6 +129,7 @@ def generate_pairs_exhaustive(img_lists, pairs_out, num_matched, feature_path cf
         name0, name1 = Path(img_lists[i]).name, Path(img_lists[j]).name
         feats0, feats1 = feature_file[name0], feature_file[name1]
 
+        data = {}
         for k in feats0.keys():
             data[k + '0'] = feats0[k].__array__()
         for k in feats1.keys():
@@ -152,19 +153,25 @@ def generate_pairs_exhaustive(img_lists, pairs_out, num_matched, feature_path cf
         p_v_s = {}
         len_sum = 0
         for j in range(0, len(img_lists)):
+            if i == j:
+                continue
             pair = '_'.join([str(i), str(j)])
             m = matches_of_pairs[pair]
             p_v_s[pair] = len(m) * np.average(m)
-            len_sum = len(m)
+            len_sum += len(m)
         for (k, v) in p_v_s.items():
-            p_v_s[k] = v / len_sum
+            if len_sum == 0:
+                p_v_s[k] = 0
+            else:
+                p_v_s[k] = v / np.float32(len_sum)
         candidate = []
         for (k, _) in sorted(p_v_s.items(), key=lambda item: item[1], reverse=True):
-            candidate.append(k)
+            p = k.split('_')[:2]
+            candidate.append((int(p[0]), int(p[1])))
         good_pairs.extend(candidate[:num_matched])
 
     with open(pairs_out, 'w') as f:
-        f.write('\n'.join(' '.join([i, j]) for i, j in good_pairs))
+        f.write('\n'.join('{} {}'.format(Path(img_lists[i]).name, Path(img_lists[j]).name) for (i, j) in good_pairs))
         print('Finishing exporting pairs...')
 
 
