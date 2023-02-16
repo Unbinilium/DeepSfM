@@ -159,11 +159,10 @@ def generate_pairs_exhaustive(img_lists, pairs_out, num_matched, feature_path, c
             m = matches_of_pairs[pair]
             p_v_s[pair] = len(m) * np.average(m)
             len_sum += len(m)
+        if len_sum == 0:
+            continue
         for (k, v) in p_v_s.items():
-            if len_sum == 0:
-                p_v_s[k] = 0
-            else:
-                p_v_s[k] = v / np.float32(len_sum)
+            p_v_s[k] = v / np.float32(len_sum)
         candidate = []
         for (k, _) in sorted(p_v_s.items(), key=lambda item: item[1], reverse=True):
             p = k.split('_')[:2]
