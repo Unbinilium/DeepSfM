@@ -157,8 +157,11 @@ def generate_pairs_exhaustive(img_lists, pairs_out, num_matched, feature_path, c
                 continue
             pair = '_'.join([str(i), str(j)])
             m = matches_of_pairs[pair]
-            p_v_s[pair] = len(m) * np.average(m)
-            len_sum += len(m)
+            l = len(m)
+            if l == 0:
+                continue
+            p_v_s[pair] = l * np.average(m)
+            len_sum += l
         if len_sum == 0:
             continue
         for (k, v) in p_v_s.items():
