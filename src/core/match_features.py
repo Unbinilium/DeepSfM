@@ -11,16 +11,12 @@ wsd = os.path.join(cfd, '../../')
 sys.path.append(wsd)
 
 
-def names_to_pair(name0, name1):
-    return '_'.join((name0, name1))
-
-
 @torch.no_grad()
 def spg(feature_path, pairs, matches_out, cfg):
     """Match features by SuperGlue"""
 
     from thirdparty.SuperGluePretrainedNetwork.models.superglue import SuperGlue as spg_matcher
-    from utils import load_network
+    from utils import load_network, names_to_pair
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f'Running inference on device \"{device}\"')

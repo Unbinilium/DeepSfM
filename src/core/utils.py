@@ -7,6 +7,10 @@ from types import SimpleNamespace
 from torch.utils.data import Dataset
 
 
+def names_to_pair(name0, name1):
+    return '_'.join((name0, name1))
+
+
 class NormalizedDataset(Dataset):
     """read images(suppose images have been cropped)"""
     default_conf = {

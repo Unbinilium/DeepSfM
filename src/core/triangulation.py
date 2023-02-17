@@ -14,10 +14,7 @@ sys.path.append(wsd)
 
 from thirdparty.colmap.scripts.python.database import COLMAPDatabase
 from thirdparty.colmap.scripts.python.read_write_model import CAMERA_MODEL_NAMES, read_cameras_binary, read_images_binary
-
-
-def names_to_pair(name0, name1):
-    return '_'.join((name0, name1))
+from utils import names_to_pair
 
 
 def geometric_verification(colmap_path, database_path, pairs_path):
