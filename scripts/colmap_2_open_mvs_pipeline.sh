@@ -17,10 +17,12 @@ mkdir -p "${SFM_WORKSPACE}"
 cd "${SFM_WORKSPACE}"
 
 colmap feature_extractor \
+    --SiftExtraction.use_gpu 0 \
     --database_path "${DATABASE_PATH}" \
     --image_path "${IMAGE_PATH}"
 
 colmap exhaustive_matcher \
+    --SiftMatching.use_gpu 0 \
     --database_path "${DATABASE_PATH}"
 
 colmap mapper \
