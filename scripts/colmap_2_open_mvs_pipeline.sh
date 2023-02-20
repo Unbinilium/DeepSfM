@@ -14,6 +14,8 @@ SPARSE_PATH="${SFM_WORKSPACE}/sparse"
 DENSE_PATH="${SFM_WORKSPACE}/dense"
 
 mkdir -p "${SFM_WORKSPACE}"
+mkdir -p "${SPARSE_PATH}"
+mkdir -p "${DENSE_PATH}"
 cd "${SFM_WORKSPACE}"
 
 colmap feature_extractor \
