@@ -38,8 +38,15 @@ colmap image_undistorter \
     --output_path "${DENSE_PATH}" \
     --output_type COLMAP \
 
+LAST_SPARSE=""
+for entry in "${SPARSE_PATH}"/*
+do
+    [ -d "$entry" ] && LAST_SPARSE="$entry"
+done
+echo "Last Sparse Folder: ${LAST_SPARSE}"
+
 colmap model_converter \
-    --input_path "${SPARSE_PATH}/0" \
+    --input_path "${LAST_SPARSE}" \
     --output_path "${SPARSE_PATH}"  \
     --output_type TXT
 
@@ -51,7 +58,7 @@ ln -s "${IMAGE_PATH}" "${MVS_WS}/images"
 
 InterfaceCOLMAP \
     --working-folder "${MVS_WS}" \
-    --input-file "${SPARSE_PATH}/0" \
+    --input-file "${SFM_WORKSPACE}" \
     --output-file "${MVS_WS}/model_colmap.mvs"
 
 DensifyPointCloud \
