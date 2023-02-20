@@ -2,6 +2,7 @@
 
 if [ "$#" != 1 ]; then
     echo "Usage: $0 <DATASET FOLDER>"
+    exit 0
 fi
 
 ## COLMAP
