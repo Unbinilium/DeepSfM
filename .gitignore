@@ -4,6 +4,7 @@ etc
 include
 lib
 share
+*-result.ipynb
 pyvenv.cfg
 __pycache__
 *.pyc
