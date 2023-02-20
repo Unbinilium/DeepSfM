@@ -33,18 +33,18 @@ colmap mapper \
     --image_path "${IMAGE_PATH}" \
     --output_path "${SPARSE_PATH}"
 
-colmap image_undistorter \
-    --image_path "${IMAGE_PATH}" \
-    --input_path "${SPARSE_PATH}/0" \
-    --output_path "${DENSE_PATH}" \
-    --output_type COLMAP \
-
 LAST_SPARSE=""
 for entry in "${SPARSE_PATH}"/*
 do
     [ -d "$entry" ] && LAST_SPARSE="$entry"
 done
 echo "Last Sparse Folder: ${LAST_SPARSE}"
+
+colmap image_undistorter \
+    --image_path "${IMAGE_PATH}" \
+    --input_path "${LAST_SPARSE}" \
+    --output_path "${DENSE_PATH}" \
+    --output_type COLMAP \
 
 colmap model_converter \
     --input_path "${LAST_SPARSE}" \
