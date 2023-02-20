@@ -20,6 +20,7 @@ cd "${SFM_WORKSPACE}"
 
 colmap feature_extractor \
     --SiftExtraction.use_gpu 0 \
+    --ImageReader.camera_model PINHOLE \
     --database_path "${DATABASE_PATH}" \
     --image_path "${IMAGE_PATH}"
 
