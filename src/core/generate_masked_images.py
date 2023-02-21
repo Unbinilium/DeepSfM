@@ -96,9 +96,11 @@ def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, hy
         mask_name = Path(img_path).stem
         cv2.imwrite(os.path.join(masks_out, mask_name + '.png'), mask)
 
-        rgba_img = Image.fromarray(img).convert('RGBA')
-        rgba_img.putalpha(Image.fromarray(mask).convert('L'))
-        rgba_img.save(os.path.join(masked_images_out, mask_name + '.png'))
+        rgb_img = Image.fromarray(img).convert('RGB')
+        mask_img = Image.fromarray(mask).convert('L')
+        bg_img = Image.new('RGB', rgb_img.size, 'WHITE')
+        out_img = Image.composite(rgb_img, bg_img, mask=mask_img)
+        out_img.convert('RGB').save(os.path.join(masked_images_out, mask_name + '.png'))
 
 
 def main(image_dir, masks_out, masked_images_out, config):
