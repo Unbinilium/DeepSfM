@@ -89,6 +89,7 @@ def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, hy
     print('Generating masks and masked images...')
     for img_path in tqdm.tqdm(img_lists):
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         inp_tensor_with_size = normalize_2_tensor_with_size(img, transform, hypar['cache_size'])
         mask = dis_predict_mask(dis_net_full, hypar['model_digit'], device, inp_tensor_with_size)
@@ -100,6 +101,7 @@ def generate_masks_and_masked_images(img_lists, masks_out, masked_images_out, hy
         mask_img = Image.fromarray(mask).convert('L')
         bg_img = Image.new('RGB', rgb_img.size, 'WHITE')
         out_img = Image.composite(rgb_img, bg_img, mask=mask_img)
+
         out_img.convert('RGB').save(os.path.join(masked_images_out, mask_name + '.png'))
 
 
