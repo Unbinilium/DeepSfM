@@ -44,7 +44,7 @@ colmap image_undistorter \
     --image_path "${IMAGE_PATH}" \
     --input_path "${LAST_SPARSE}" \
     --output_path "${DENSE_PATH}" \
-    --output_type COLMAP \
+    --output_type COLMAP
 
 colmap model_converter \
     --input_path "${DENSE_PATH}/sparse" \
