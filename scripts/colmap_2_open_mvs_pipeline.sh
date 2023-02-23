@@ -1,13 +1,13 @@
 #!/bin/bash
 
-if [ "$#" != 1 ]; then
-    echo "Usage: $0 <DATASET FOLDER>"
+if [ "$#" != 2 ]; then
+    echo "Usage: $0 <ABSOULUTE DATASET FOLDER> <images/masked_images>"
     exit 0
 fi
 
 ## COLMAP
 DATASETS_FOLDER="$1"
-IMAGE_PATH="${DATASETS_FOLDER}/images"
+IMAGE_PATH="${DATASETS_FOLDER}/$2"
 SFM_WORKSPACE="${DATASETS_FOLDER}/sfm_ws"
 DATABASE_PATH="${SFM_WORKSPACE}/database.db"
 SPARSE_PATH="${SFM_WORKSPACE}/sparse"
@@ -22,16 +22,16 @@ colmap feature_extractor \
     --SiftExtraction.use_gpu 0 \
     --ImageReader.camera_model PINHOLE \
     --database_path "${DATABASE_PATH}" \
-    --image_path "${IMAGE_PATH}"
+    --image_path "${IMAGE_PATH}" > "${SFM_WORKSPACE}/feature_extractor-$(date -I).log"
 
 colmap exhaustive_matcher \
     --SiftMatching.use_gpu 0 \
-    --database_path "${DATABASE_PATH}"
+    --database_path "${DATABASE_PATH}" > "${SFM_WORKSPACE}/exhaustive_matcher-$(date -I).log"
 
 colmap mapper \
     --database_path "${DATABASE_PATH}" \
     --image_path "${IMAGE_PATH}" \
-    --output_path "${SPARSE_PATH}"
+    --output_path "${SPARSE_PATH}" > "${SFM_WORKSPACE}/mapper-$(date -I).log"
 
 LAST_SPARSE=""
 for entry in "${SPARSE_PATH}"/*
@@ -44,12 +44,12 @@ colmap image_undistorter \
     --image_path "${IMAGE_PATH}" \
     --input_path "${LAST_SPARSE}" \
     --output_path "${DENSE_PATH}" \
-    --output_type COLMAP
+    --output_type COLMAP > "${SFM_WORKSPACE}/image_undistorter-$(date -I).log"
 
 colmap model_converter \
     --input_path "${DENSE_PATH}/sparse" \
-    --output_path "${SPARSE_PATH}"  \
-    --output_type TXT
+    --output_path "${SPARSE_PATH}" \
+    --output_type TXT > "${SFM_WORKSPACE}/model_converter-$(date -I).log"
 
 ## OpenMVS
 MVS_WS="${DATASETS_FOLDER}/mvs_ws"
