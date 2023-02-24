@@ -50,3 +50,7 @@ python3 -m pip install -r env/venv_cpu_3.10.txt
     - [COLMAP](https://github.com/Unbinilium/colmap)
     - [OpenMVS](https://github.com/Unbinilium/openMVS)
     - [VCG](https://github.com/Unbinilium/VCG)
+
+- Extra (Not included)
+    - [Point Cloud Utils](https://github.com/fwilliams/point-cloud-utils)
+    - [Polyscope](https://github.com/nmwsharp/polyscope)
