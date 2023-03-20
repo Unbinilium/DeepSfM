@@ -2,7 +2,7 @@
 
 ### Abstract
 
-In order to improve the robustness, accuracy, and completeness of incremental motion recovery-based multi-view 3D reconstruction, my research studies the structure and principle of the traditional multi-view 3D reconstruction pipeline based on motion recovery and combines the cutting-edge research achievements of deep learning in the field of image processing to design, proposed a deep learning optimized multi-view 3D reconstruction pipeline.
+In order to improve the robustness, accuracy, and completeness of incremental motion recovery-based multi-view 3D reconstruction, my research studies the structure and principle of the traditional multi-view 3D reconstruction pipeline based on motion recovery and combines the cutting-edge research achievements of deep learning in the field of image processing to design and propose a deep learning optimized multi-view 3D reconstruction pipeline.
 
 
 ### Environment
